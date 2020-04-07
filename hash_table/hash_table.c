@@ -52,20 +52,27 @@ int hash(const char *key, const int m) {
 
 void insert(hash_table *table, const char *key, const char *value)
 {
-    key_value *new = new_node(key, value);
     uint16_t index = hash(key, table->size);
-
     key_value *cur_node = table->node[index];
     if (cur_node != NULL) {
+        if (strcmp(cur_node->key, key) == 0) {
+            // replace value
+            cur_node->value = strdup(value);
+            return;
+        }
         // have data in this index
         while (cur_node->next != NULL) {
             cur_node = cur_node->next;
+            if (strcmp(cur_node->key, key) == 0) {
+                // replace value
+                cur_node->value = strdup(value);
+                return;
+            }
         }
-        cur_node->next = new;
-        printf("second:    key: %s, value: %s, index: %d\n", new->key, new->value, index);
+
+        cur_node->next = new_node(key, value);
     } else {
-        printf("first:    key: %s, value: %s, index: %d\n", new->key, new->value, index);
-        table->node[index] = new;
+        table->node[index] = new_node(key, value);
     }
 
     table->count++;
@@ -75,7 +82,6 @@ char *search(hash_table *table, const char *key)
 {
     uint16_t index = hash(key, table->size);
     key_value *find_node = table->node[index];
-    uint16_t i = 1;
     if (find_node != NULL) {
         if (strcmp(find_node->key, key) == 0) {
             return find_node->value;
@@ -92,6 +98,38 @@ char *search(hash_table *table, const char *key)
     return NULL;
 }
 
+void delete(hash_table *table, const char *key)
+{
+    uint16_t index = hash(key, table->size);
+    key_value *find_node = table->node[index];
+
+    if (find_node != NULL) {
+        if (strcmp(find_node->key, key) == 0) {
+            // if has linked list, node index = first linked list
+            if (find_node->next != NULL) {
+                table->node[index] = find_node->next;
+            }
+            free(find_node);
+            return;
+        }
+
+        // if has linked list, move linked list to node index
+        while (find_node->next != NULL) {
+            if (strcmp(find_node->next->key, key) == 0) {
+                key_value *tmp = find_node->next;
+                if (find_node->next->next != NULL) {
+                    find_node->next = find_node->next->next;
+                } else {
+                    find_node->next = NULL;
+                }
+                free(tmp);
+                return;
+            }
+            find_node = find_node->next;
+        }
+    }
+}
+
 void traverse(hash_table *table)
 {
     uint16_t i;
@@ -101,7 +139,7 @@ void traverse(hash_table *table)
             printf("key: %s, value: %s, index: %d\n", tmp->key, tmp->value, i);
             while (tmp->next != NULL) {
                 tmp = tmp->next;
-                printf("            >>> key: %s, value: %s <<<\n", tmp->key, tmp->value);
+                printf("    key: %s, value: %s\n", tmp->key, tmp->value);
             }
         }
     }
@@ -111,6 +149,7 @@ int main(int argc, char *argv[])
 {
     hash_table *table = init_table();
 
+    printf(">>>test insert:<<<\n");
     uint8_t name[10];
     uint8_t num[10];
     for (uint16_t i = 1; i <= 100; i++) {
@@ -119,13 +158,23 @@ int main(int argc, char *argv[])
         strcat(name, num);
         insert(table, name, name);
     }
+    // exist key, replace value
+    insert(table, "test29", "TEST29");
 
-    printf("\n\n==================================\n\n");
+    printf(">>>test traverse:<<<\n");
     traverse(table);
-    printf("\n\n==================================\n\n");
+    printf("==================================\n\n");
 
+    printf(">>>test search:<<<\n");
     printf("search: %s\n", search(table, "test100"));
     printf("search: %s\n", search(table, "test50"));
+    printf("==================================\n\n");
+
+    printf(">>>test delete:<<<\n");
+    delete(table, "test92");
+    delete(table, "test6");
+    delete(table, "test89");
+    traverse(table);
 
     destroy_table(table);
 
