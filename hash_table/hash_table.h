@@ -22,6 +22,6 @@ int hash(const char *key, const int m);
 void insert(hash_table *table, const char *key, const char *value);
 char *search(hash_table *table, const char *key);
 void traverse(hash_table *table);
-//void delete(hash_table *table, const char *key);
+void delete(hash_table *table, const char *key);
 
 #endif

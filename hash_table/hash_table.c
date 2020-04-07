@@ -109,6 +109,8 @@ void delete(hash_table *table, const char *key)
             if (find_node->next != NULL) {
                 table->node[index] = find_node->next;
             }
+            free(find_node->key);
+            free(find_node->value);
             free(find_node);
             return;
         }
@@ -122,6 +124,8 @@ void delete(hash_table *table, const char *key)
                 } else {
                     find_node->next = NULL;
                 }
+                free(tmp->key);
+                free(tmp->value);
                 free(tmp);
                 return;
             }
